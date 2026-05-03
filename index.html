@@ -28,7 +28,6 @@
 
         h1 { font-weight: normal; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* The Byte Row */
         .byte-container {
             display: flex;
             gap: 12px;
@@ -59,7 +58,6 @@
             box-shadow: var(--glow);
         }
 
-        /* Combined Data Rows */
         .data-row {
             display: flex;
             gap: 40px;
@@ -108,7 +106,6 @@
             text-align: center;
         }
 
-        /* Teacher Controls */
         .controls {
             margin-top: 50px;
             display: flex;
@@ -130,7 +127,6 @@
             transition: all 0.1s ease;
         }
 
-        /* Selected State: Inverted colors */
         .toggle-btn.active {
             background-color: var(--phosphor-green);
             color: #1a1d23;
@@ -168,38 +164,40 @@
         <div class="bit-switch" onclick="toggleBit(0)">1</div>
     </div>
 
+    <!-- Start with 'hidden' class added to rows -->
     <div class="data-row hidden" id="conversion-row">
-        <div class="data-group" id="group-bin">
+        <div class="data-group hidden" id="group-bin">
             <div class="label">Binary</div>
             <input type="text" id="binary-input" maxlength="8" oninput="handleManualEntry('bin')">
         </div>
-        <div class="data-group" id="group-dec">
+        <div class="data-group hidden" id="group-dec">
             <div class="label">Decimal</div>
             <input type="number" id="decimal-input" min="0" max="255" oninput="handleManualEntry('dec')">
         </div>
-        <div class="data-group" id="group-hex">
+        <div class="data-group hidden" id="group-hex">
             <div class="label">Hexadecimal</div>
             <input type="text" id="hex-input" maxlength="2" oninput="handleManualEntry('hex')">
         </div>
     </div>
 
     <div class="data-row hidden" id="ascii-row">
-        <div class="data-group" id="group-ascii">
+        <div class="data-group hidden" id="group-ascii">
             <div class="label">ASCII Character</div>
             <input type="text" id="ascii-input" maxlength="1" oninput="handleManualEntry('ascii')">
         </div>
-        <div class="data-group" id="group-desc">
+        <div class="data-group hidden" id="group-desc">
             <div class="label">ASCII Description</div>
             <span id="ascii-desc" class="desc-text">Null</span>
         </div>
     </div>
 
+    <!-- Removed 'active' class from buttons so they start as outlines -->
     <div class="controls">
-        <button class="toggle-btn" onclick="toggleVisibility('group-bin', this)">Binary</button>
-        <button class="toggle-btn" onclick="toggleVisibility('group-dec', this)">Decimal</button>
-        <button class="toggle-btn" onclick="toggleVisibility('group-hex', this)">Hex</button>
-        <button class="toggle-btn" onclick="toggleVisibility('group-ascii', this)">Character</button>
-        <button class="toggle-btn" onclick="toggleVisibility('group-desc', this)">Description</button>
+        <button class="toggle-btn" onclick="toggleVisibilityGroup(['conversion-row', 'group-bin'], this)">Binary</button>
+        <button class="toggle-btn" onclick="toggleVisibilityGroup(['conversion-row', 'group-dec'], this)">Decimal</button>
+        <button class="toggle-btn" onclick="toggleVisibilityGroup(['conversion-row', 'group-hex'], this)">Hex</button>
+        <button class="toggle-btn" onclick="toggleVisibilityGroup(['ascii-row', 'group-ascii'], this)">Character</button>
+        <button class="toggle-btn" onclick="toggleVisibilityGroup(['ascii-row', 'group-desc'], this)">Description</button>
         <button class="toggle-btn" onclick="toggleLabels(this)">Labels</button>
         <button class="action-btn" onclick="clearAll()">Clear All</button>
     </div>
@@ -265,18 +263,21 @@
             document.getElementById('ascii-desc').innerText = specialChars[total] || "Printable Character";
         }
 
-        function toggleVisibility(id, btn) {
-            document.getElementById(id).classList.toggle('hidden');
+        // Updated visibility logic to handle parent rows automatically
+        function toggleVisibilityGroup(ids, btn) {
+            ids.forEach(id => document.getElementById(id).classList.toggle('hidden'));
             btn.classList.toggle('active');
         }
 
         function toggleLabels(btn) {
             switches.forEach(s => {
-                s.style.color = s.style.color === 'transparent' ? '' : 'transparent';
+                s.style.color = (s.style.color === 'transparent' || s.style.color === '') ? 'var(--text-dim)' : 'transparent';
+                // Sync the ON state color if labels are on
+                if (s.classList.contains('on')) s.style.color = (s.style.color === 'transparent') ? 'transparent' : '#1a1d23';
             });
             btn.classList.toggle('active');
         }
-
+        
         // Final tweak: Initial state has labels OFF
         switches.forEach(s => s.style.color = 'transparent');
         updateUI();
