@@ -168,7 +168,7 @@
         <div class="bit-switch" onclick="toggleBit(0)">1</div>
     </div>
 
-    <div class="data-row" id="conversion-row">
+    <div class="data-row hidden" id="conversion-row">
         <div class="data-group" id="group-bin">
             <div class="label">Binary</div>
             <input type="text" id="binary-input" maxlength="8" oninput="handleManualEntry('bin')">
@@ -183,7 +183,7 @@
         </div>
     </div>
 
-    <div class="data-row" id="ascii-row">
+    <div class="data-row hidden" id="ascii-row">
         <div class="data-group" id="group-ascii">
             <div class="label">ASCII Character</div>
             <input type="text" id="ascii-input" maxlength="1" oninput="handleManualEntry('ascii')">
@@ -195,12 +195,12 @@
     </div>
 
     <div class="controls">
-        <button class="toggle-btn active" onclick="toggleVisibility('group-bin', this)">Binary</button>
-        <button class="toggle-btn active" onclick="toggleVisibility('group-dec', this)">Decimal</button>
-        <button class="toggle-btn active" onclick="toggleVisibility('group-hex', this)">Hex</button>
-        <button class="toggle-btn active" onclick="toggleVisibility('group-ascii', this)">Character</button>
-        <button class="toggle-btn active" onclick="toggleVisibility('group-desc', this)">Description</button>
-        <button class="toggle-btn active" onclick="toggleLabels(this)">Labels</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-bin', this)">Binary</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-dec', this)">Decimal</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-hex', this)">Hex</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-ascii', this)">Character</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-desc', this)">Description</button>
+        <button class="toggle-btn" onclick="toggleLabels(this)">Labels</button>
         <button class="action-btn" onclick="clearAll()">Clear All</button>
     </div>
 
