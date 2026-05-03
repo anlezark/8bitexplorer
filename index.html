@@ -205,7 +205,7 @@
     </div>
 
     <div class="footer">
-        An adventure in learning created by Tom Anlezark. Version 1.4
+        An adventure in learning created by Tom Anlezark. Version 1.5
     </div>
 
     <script>
@@ -276,7 +276,9 @@
             });
             btn.classList.toggle('active');
         }
-        
+
+        // Final tweak: Initial state has labels OFF
+        switches.forEach(s => s.style.color = 'transparent');
         updateUI();
     </script>
 </body>
