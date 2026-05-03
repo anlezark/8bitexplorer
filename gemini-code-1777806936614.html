@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8-Bit Data Explorer</title>
+    <style>
+        :root {
+            --bg-color: #1a1d23;
+            --off-slate: #3c414d;
+            --phosphor-green: #32cd32;
+            --glow: 0 0 15px rgba(50, 205, 50, 0.6);
+            --text-dim: #228b22;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--phosphor-green);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 { font-weight: normal; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* The Byte Row */
+        .byte-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+            align-items: center;
+        }
+
+        .bit-switch {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            background-color: var(--off-slate);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            transition: background-color 0.1s, color 0.1s, box-shadow 0.1s;
+            user-select: none;
+            font-weight: normal;
+        }
+
+        .bit-switch.on {
+            background-color: var(--phosphor-green);
+            color: #1a1d23;
+            box-shadow: var(--glow);
+        }
+
+        /* Combined Data Rows */
+        .data-row {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 20px 0;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .data-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .label { 
+            color: var(--text-dim); 
+            font-size: 0.75rem; 
+            margin-bottom: 8px; 
+            text-transform: uppercase;
+        }
+
+        input {
+            background: transparent;
+            border: 1px solid var(--text-dim);
+            color: var(--phosphor-green);
+            font-family: inherit;
+            font-size: 1.6rem;
+            text-align: center;
+            padding: 8px;
+            outline: none;
+        }
+
+        input:focus { border-color: var(--phosphor-green); }
+
+        #binary-input { width: 180px; letter-spacing: 2px; }
+        #decimal-input { width: 80px; }
+        #hex-input { width: 70px; text-transform: uppercase; }
+        #ascii-input { width: 50px; }
+
+        .desc-text {
+            font-size: 1.4rem;
+            padding: 8px;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        /* Teacher Controls */
+        .controls {
+            margin-top: 50px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .toggle-btn, .action-btn {
+            border: 1px solid var(--text-dim);
+            background: transparent;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            transition: all 0.1s ease;
+        }
+
+        /* Selected State: Inverted colors */
+        .toggle-btn.active {
+            background-color: var(--phosphor-green);
+            color: #1a1d23;
+            border-color: var(--phosphor-green);
+        }
+
+        .action-btn:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .footer {
+            margin-top: 60px;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            opacity: 0.7;
+            text-align: center;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <h1>8-Bit Data Explorer</h1>
+
+    <div class="byte-container">
+        <div class="bit-switch" onclick="toggleBit(7)">128</div>
+        <div class="bit-switch" onclick="toggleBit(6)">64</div>
+        <div class="bit-switch" onclick="toggleBit(5)">32</div>
+        <div class="bit-switch" onclick="toggleBit(4)">16</div>
+        <div class="bit-switch" onclick="toggleBit(3)">8</div>
+        <div class="bit-switch" onclick="toggleBit(2)">4</div>
+        <div class="bit-switch" onclick="toggleBit(1)">2</div>
+        <div class="bit-switch" onclick="toggleBit(0)">1</div>
+    </div>
+
+    <div class="data-row" id="conversion-row">
+        <div class="data-group" id="group-bin">
+            <div class="label">Binary</div>
+            <input type="text" id="binary-input" maxlength="8" oninput="handleManualEntry('bin')">
+        </div>
+        <div class="data-group" id="group-dec">
+            <div class="label">Decimal</div>
+            <input type="number" id="decimal-input" min="0" max="255" oninput="handleManualEntry('dec')">
+        </div>
+        <div class="data-group" id="group-hex">
+            <div class="label">Hexadecimal</div>
+            <input type="text" id="hex-input" maxlength="2" oninput="handleManualEntry('hex')">
+        </div>
+    </div>
+
+    <div class="data-row" id="ascii-row">
+        <div class="data-group" id="group-ascii">
+            <div class="label">ASCII Character</div>
+            <input type="text" id="ascii-input" maxlength="1" oninput="handleManualEntry('ascii')">
+        </div>
+        <div class="data-group" id="group-desc">
+            <div class="label">ASCII Description</div>
+            <span id="ascii-desc" class="desc-text">Null</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="toggle-btn active" onclick="toggleVisibility('group-bin', this)">Binary</button>
+        <button class="toggle-btn active" onclick="toggleVisibility('group-dec', this)">Decimal</button>
+        <button class="toggle-btn active" onclick="toggleVisibility('group-hex', this)">Hex</button>
+        <button class="toggle-btn active" onclick="toggleVisibility('group-ascii', this)">Character</button>
+        <button class="toggle-btn active" onclick="toggleVisibility('group-desc', this)">Description</button>
+        <button class="toggle-btn active" onclick="toggleLabels(this)">Labels</button>
+        <button class="action-btn" onclick="clearAll()">Clear All</button>
+    </div>
+
+    <div class="footer">
+        An adventure in learning created by Tom Anlezark. Version 1.4
+    </div>
+
+    <script>
+        let bits = [0, 0, 0, 0, 0, 0, 0, 0];
+        const switches = document.querySelectorAll('.bit-switch');
+
+        const specialChars = {
+            0: "Null", 8: "Backspace", 9: "Tab", 10: "Line Feed", 13: "Enter", 
+            32: "Space", 127: "Delete"
+        };
+
+        function toggleBit(index) {
+            bits[index] = bits[index] === 0 ? 1 : 0;
+            updateUI();
+        }
+
+        function clearAll() {
+            bits = [0, 0, 0, 0, 0, 0, 0, 0];
+            updateUI();
+        }
+
+        function handleManualEntry(type) {
+            let val = 0;
+            if (type === 'bin') {
+                const raw = document.getElementById('binary-input').value;
+                const cleaned = raw.replace(/[^01]/g, '').padEnd(8, '0').substring(0, 8);
+                val = parseInt(cleaned, 2) || 0;
+            } else if (type === 'dec') {
+                val = parseInt(document.getElementById('decimal-input').value) || 0;
+            } else if (type === 'hex') {
+                val = parseInt(document.getElementById('hex-input').value, 16) || 0;
+            } else if (type === 'ascii') {
+                const input = document.getElementById('ascii-input').value;
+                val = input.length > 0 ? input.charCodeAt(0) : 0;
+            }
+            val = Math.min(Math.max(val, 0), 255);
+            for (let i = 0; i < 8; i++) bits[i] = (val >> i) & 1;
+            updateUI(type);
+        }
+
+        function updateUI(excludeSource = '') {
+            let total = 0;
+            let binaryStr = "";
+            for (let i = 7; i >= 0; i--) {
+                const bit = bits[i];
+                total += bit * Math.pow(2, i);
+                binaryStr += bit;
+                if (bit === 1) switches[7-i].classList.add('on');
+                else switches[7-i].classList.remove('on');
+            }
+            if (excludeSource !== 'bin') document.getElementById('binary-input').value = binaryStr;
+            if (excludeSource !== 'dec') document.getElementById('decimal-input').value = total;
+            if (excludeSource !== 'hex') document.getElementById('hex-input').value = total.toString(16).toUpperCase().padStart(2, '0');
+            if (excludeSource !== 'ascii') {
+                document.getElementById('ascii-input').value = (total > 31 && total < 127) ? String.fromCharCode(total) : "";
+            }
+            document.getElementById('ascii-desc').innerText = specialChars[total] || "Printable Character";
+        }
+
+        function toggleVisibility(id, btn) {
+            document.getElementById(id).classList.toggle('hidden');
+            btn.classList.toggle('active');
+        }
+
+        function toggleLabels(btn) {
+            switches.forEach(s => {
+                s.style.color = s.style.color === 'transparent' ? '' : 'transparent';
+            });
+            btn.classList.toggle('active');
+        }
+        
+        updateUI();
+    </script>
+</body>
+</html>
