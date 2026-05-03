@@ -10,7 +10,9 @@
             --off-slate: #3c414d;
             --phosphor-green: #32cd32;
             --glow: 0 0 15px rgba(50, 205, 50, 0.6);
+            --glow-red: 0 0 15px rgba(255, 68, 68, 0.6);
             --text-dim: #228b22;
+            --alert-red: #ff4444;
         }
 
         body {
@@ -26,7 +28,7 @@
             padding: 20px;
         }
 
-        h1 { font-weight: normal; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 2px; }
+        h1 { font-weight: normal; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
 
         .byte-container {
             display: flex;
@@ -47,39 +49,23 @@
             cursor: pointer;
             font-size: 1.2rem;
             color: var(--text-dim);
-            transition: background-color 0.1s, color 0.1s, box-shadow 0.1s;
+            transition: all 0.1s;
             user-select: none;
         }
 
-        .bit-switch.on {
-            background-color: var(--phosphor-green);
-            color: #1a1d23;
-            box-shadow: var(--glow);
-        }
+        .bit-switch.on { background-color: var(--phosphor-green); color: #1a1d23; box-shadow: var(--glow); }
 
-        /* Shelves stay visible, but flex properties keep items centered */
         .data-row {
             display: flex;
             gap: 40px;
             justify-content: center;
-            align-items: flex-start;
             margin: 10px 0;
             width: 100%;
-            min-height: 80px; /* Prevents layout jumping */
+            min-height: 80px;
         }
 
-        .data-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .label { 
-            color: var(--text-dim); 
-            font-size: 0.75rem; 
-            margin-bottom: 8px; 
-            text-transform: uppercase;
-        }
+        .data-group { display: flex; flex-direction: column; align-items: center; }
+        .label { color: var(--text-dim); font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase; }
 
         input {
             background: transparent;
@@ -92,28 +78,22 @@
             outline: none;
         }
 
-        input:focus { border-color: var(--phosphor-green); }
-
         #binary-input { width: 180px; letter-spacing: 2px; }
         #decimal-input { width: 80px; }
         #hex-input { width: 70px; text-transform: uppercase; }
         #ascii-input { width: 50px; }
 
-        .desc-text {
-            font-size: 1.4rem;
-            padding: 8px;
-            min-width: 150px;
-            text-align: center;
-        }
+        .desc-text { font-size: 1.4rem; padding: 8px; min-width: 150px; text-align: center; height: 1.4rem; }
 
-        .controls {
-            margin-top: 50px;
+        .controls-container {
             display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 40px;
             align-items: center;
         }
+
+        .control-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
         .toggle-btn, .action-btn {
             border: 1px solid var(--text-dim);
@@ -124,24 +104,33 @@
             font-family: inherit;
             font-size: 0.7rem;
             text-transform: uppercase;
+            transition: all 0.2s;
         }
 
-        .toggle-btn.active {
-            background-color: var(--phosphor-green);
-            color: #1a1d23;
-            border-color: var(--phosphor-green);
+        .toggle-btn.active { background-color: var(--phosphor-green); color: #1a1d23; border-color: var(--phosphor-green); }
+        .action-btn:hover { border-color: var(--phosphor-green); color: var(--phosphor-green); }
+        .clear-btn { color: var(--alert-red); border-color: var(--alert-red); opacity: 0.8; }
+        .clear-btn:hover { color: white !important; background-color: var(--alert-red); border-color: var(--alert-red) !important; box-shadow: var(--glow-red); opacity: 1; }
+
+        #chart-overlay {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 29, 35, 0.98);
+            border: 2px solid var(--phosphor-green);
+            padding: 30px;
+            z-index: 100;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
         }
 
-        .action-btn:hover { border-color: #ff4444; color: #ff4444; }
+        table { border-collapse: collapse; width: 100%; color: var(--phosphor-green); }
+        th, td { border: 1px solid var(--text-dim); padding: 10px; text-align: center; font-size: 0.9rem; }
+        th { text-transform: uppercase; color: var(--text-dim); }
 
-        .footer {
-            margin-top: 60px;
-            font-size: 0.65rem;
-            color: var(--text-dim);
-            opacity: 0.7;
-            text-align: center;
-        }
-
+        .footer { margin-top: 40px; font-size: 0.65rem; color: var(--text-dim); opacity: 0.7; }
         .hidden { visibility: hidden; pointer-events: none; }
     </style>
 </head>
@@ -160,52 +149,50 @@
         <div class="bit-switch" onclick="toggleBit(0)">1</div>
     </div>
 
-    <!-- Conversion Shelf -->
     <div class="data-row">
-        <div class="data-group hidden" id="group-bin">
-            <div class="label">Binary</div>
-            <input type="text" id="binary-input" maxlength="8" oninput="handleManualEntry('bin')">
-        </div>
-        <div class="data-group hidden" id="group-dec">
-            <div class="label">Decimal</div>
-            <input type="number" id="decimal-input" min="0" max="255" oninput="handleManualEntry('dec')">
-        </div>
-        <div class="data-group hidden" id="group-hex">
-            <div class="label">Hexadecimal</div>
-            <input type="text" id="hex-input" maxlength="2" oninput="handleManualEntry('hex')">
-        </div>
+        <div class="data-group hidden" id="group-bin"><div class="label">Binary</div><input type="text" id="binary-input" maxlength="8" oninput="handleManualEntry('bin')"></div>
+        <div class="data-group hidden" id="group-dec"><div class="label">Decimal</div><input type="number" id="decimal-input" oninput="handleManualEntry('dec')"></div>
+        <div class="data-group hidden" id="group-hex"><div class="label">Hex</div><input type="text" id="hex-input" maxlength="2" oninput="handleManualEntry('hex')"></div>
     </div>
 
-    <!-- ASCII Shelf -->
     <div class="data-row">
-        <div class="data-group hidden" id="group-ascii">
-            <div class="label">ASCII Character</div>
-            <input type="text" id="ascii-input" maxlength="1" oninput="handleManualEntry('ascii')">
+        <div class="data-group hidden" id="group-ascii"><div class="label">ASCII Character</div><input type="text" id="ascii-input" maxlength="1" oninput="handleManualEntry('ascii')"></div>
+        <div class="data-group hidden" id="group-desc"><div class="label">ASCII Description</div><span id="ascii-desc" class="desc-text">Null</span></div>
+    </div>
+
+    <div class="controls-container">
+        <div class="control-row">
+            <button class="toggle-btn" onclick="toggleVisibility('group-bin', this)">Binary</button>
+            <button class="toggle-btn" onclick="toggleVisibility('group-dec', this)">Decimal</button>
+            <button class="toggle-btn" onclick="toggleVisibility('group-hex', this)">Hex</button>
+            <button class="toggle-btn" onclick="toggleVisibility('group-ascii', this)">Character</button>
+            <button class="toggle-btn" onclick="toggleVisibility('group-desc', this)">Description</button>
+            <button class="toggle-btn" onclick="toggleLabels(this)">Labels</button>
         </div>
-        <div class="data-group hidden" id="group-desc">
-            <div class="label">ASCII Description</div>
-            <span id="ascii-desc" class="desc-text">Null</span>
+        <div class="control-row">
+            <button class="action-btn" onclick="randomize()">Randomize</button>
+            <button class="action-btn" onclick="toggleChart()">ASCII Chart</button>
+            <button class="action-btn clear-btn" onclick="clearAll()">Clear All</button>
         </div>
     </div>
 
-    <div class="controls">
-        <button class="toggle-btn" onclick="toggleVisibility('group-bin', this)">Binary</button>
-        <button class="toggle-btn" onclick="toggleVisibility('group-dec', this)">Decimal</button>
-        <button class="toggle-btn" onclick="toggleVisibility('group-hex', this)">Hex</button>
-        <button class="toggle-btn" onclick="toggleVisibility('group-ascii', this)">Character</button>
-        <button class="toggle-btn" onclick="toggleVisibility('group-desc', this)">Description</button>
-        <button class="toggle-btn" onclick="toggleLabels(this)">Labels</button>
-        <button class="action-btn" onclick="clearAll()">Clear All</button>
+    <div id="chart-overlay">
+        <button class="action-btn" style="float: right; margin-bottom: 10px;" onclick="toggleChart()">Close [X]</button>
+        <table>
+            <thead><tr><th>Char</th><th>Dec</th><th>Hex</th><th>Binary</th></tr></thead>
+            <tbody id="chart-body"></tbody>
+        </table>
     </div>
 
-    <div class="footer">
-        An adventure in learning created by Tom Anlezark. Version 1.6
-    </div>
+    <div class="footer">An adventure in learning created by Tom Anlezark. Version 1.72</div>
 
     <script>
         let bits = [0, 0, 0, 0, 0, 0, 0, 0];
         const switches = document.querySelectorAll('.bit-switch');
-        const specialChars = { 0: "Null", 8: "Backspace", 9: "Tab", 10: "Line Feed", 13: "Enter", 32: "Space", 127: "Delete" };
+        const specialChars = { 
+            0: "Null", 8: "Backspace", 9: "Tab", 10: "Line Feed", 13: "Enter", 
+            32: "Space", 127: "Delete" 
+        };
 
         function toggleBit(index) {
             bits[index] = bits[index] === 0 ? 1 : 0;
@@ -217,12 +204,21 @@
             updateUI();
         }
 
+        function randomize() {
+            let count = 0;
+            const interval = setInterval(() => {
+                const randomVal = Math.floor(Math.random() * (126 - 32 + 1)) + 32;
+                for (let i = 0; i < 8; i++) bits[i] = (randomVal >> i) & 1;
+                updateUI();
+                count++;
+                if (count > 10) clearInterval(interval);
+            }, 80);
+        }
+
         function handleManualEntry(type) {
             let val = 0;
             if (type === 'bin') {
-                const raw = document.getElementById('binary-input').value;
-                const cleaned = raw.replace(/[^01]/g, '').padEnd(8, '0').substring(0, 8);
-                val = parseInt(cleaned, 2) || 0;
+                val = parseInt(document.getElementById('binary-input').value.substring(0,8), 2) || 0;
             } else if (type === 'dec') {
                 val = parseInt(document.getElementById('decimal-input').value) || 0;
             } else if (type === 'hex') {
@@ -243,10 +239,7 @@
                 const bit = bits[i];
                 total += bit * Math.pow(2, i);
                 binaryStr += bit;
-                if (bit === 1) switches[7-i].classList.add('on');
-                else switches[7-i].classList.remove('on');
-                
-                // Sync label color if ON
+                switches[7-i].classList.toggle('on', bit === 1);
                 if (switches[7-i].style.color !== 'transparent') {
                     switches[7-i].style.color = (bit === 1) ? '#1a1d23' : 'var(--text-dim)';
                 }
@@ -254,13 +247,16 @@
             if (excludeSource !== 'bin') document.getElementById('binary-input').value = binaryStr;
             if (excludeSource !== 'dec') document.getElementById('decimal-input').value = total;
             if (excludeSource !== 'hex') document.getElementById('hex-input').value = total.toString(16).toUpperCase().padStart(2, '0');
+            
+            const isPrintable = (total > 31 && total < 127);
             if (excludeSource !== 'ascii') {
-                document.getElementById('ascii-input').value = (total > 31 && total < 127) ? String.fromCharCode(total) : "";
+                document.getElementById('ascii-input').value = isPrintable ? String.fromCharCode(total) : "";
             }
-            document.getElementById('ascii-desc').innerText = specialChars[total] || "Printable Character";
+            
+            // Description Logic: Only show if special, otherwise blank
+            document.getElementById('ascii-desc').innerText = specialChars[total] || "";
         }
 
-        // Back to the simpler toggle logic
         function toggleVisibility(id, btn) {
             document.getElementById(id).classList.toggle('hidden');
             btn.classList.toggle('active');
@@ -268,19 +264,31 @@
 
         function toggleLabels(btn) {
             switches.forEach((s, i) => {
-                const bitIndex = 7 - i;
-                const isCurrentlyTransparent = (s.style.color === 'transparent');
-                
-                if (isCurrentlyTransparent) {
-                    s.style.color = (bits[bitIndex] === 1) ? '#1a1d23' : 'var(--text-dim)';
-                } else {
-                    s.style.color = 'transparent';
-                }
+                const isOff = (s.style.color === 'transparent' || s.style.color === '');
+                s.style.color = isOff ? (bits[7-i] === 1 ? '#1a1d23' : 'var(--text-dim)') : 'transparent';
             });
             btn.classList.toggle('active');
         }
-        
-        // Initial State: Labels Hidden
+
+        function toggleChart() {
+            const overlay = document.getElementById('chart-overlay');
+            overlay.style.display = (overlay.style.display === 'block') ? 'none' : 'block';
+            if (document.getElementById('chart-body').innerHTML === "") populateChart();
+        }
+
+        function populateChart() {
+            const body = document.getElementById('chart-body');
+            let content = "";
+            content += `<tr><td>[Space]</td><td>32</td><td>20</td><td>00100000</td></tr>`;
+            const ranges = [[48, 57], [65, 90], [97, 122]]; 
+            ranges.forEach(range => {
+                for (let i = range[0]; i <= range[1]; i++) {
+                    content += `<tr><td>${String.fromCharCode(i)}</td><td>${i}</td><td>${i.toString(16).toUpperCase()}</td><td>${i.toString(2).padStart(8, '0')}</td></tr>`;
+                }
+            });
+            body.innerHTML = content;
+        }
+
         switches.forEach(s => s.style.color = 'transparent');
         updateUI();
     </script>
