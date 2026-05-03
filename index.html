@@ -49,7 +49,6 @@
             color: var(--text-dim);
             transition: background-color 0.1s, color 0.1s, box-shadow 0.1s;
             user-select: none;
-            font-weight: normal;
         }
 
         .bit-switch.on {
@@ -58,14 +57,15 @@
             box-shadow: var(--glow);
         }
 
+        /* Shelves stay visible, but flex properties keep items centered */
         .data-row {
             display: flex;
             gap: 40px;
             justify-content: center;
             align-items: flex-start;
-            margin: 20px 0;
+            margin: 10px 0;
             width: 100%;
-            flex-wrap: wrap;
+            min-height: 80px; /* Prevents layout jumping */
         }
 
         .data-group {
@@ -124,7 +124,6 @@
             font-family: inherit;
             font-size: 0.7rem;
             text-transform: uppercase;
-            transition: all 0.1s ease;
         }
 
         .toggle-btn.active {
@@ -133,10 +132,7 @@
             border-color: var(--phosphor-green);
         }
 
-        .action-btn:hover {
-            border-color: #ff4444;
-            color: #ff4444;
-        }
+        .action-btn:hover { border-color: #ff4444; color: #ff4444; }
 
         .footer {
             margin-top: 60px;
@@ -146,7 +142,7 @@
             text-align: center;
         }
 
-        .hidden { display: none !important; }
+        .hidden { visibility: hidden; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -164,8 +160,8 @@
         <div class="bit-switch" onclick="toggleBit(0)">1</div>
     </div>
 
-    <!-- Start with 'hidden' class added to rows -->
-    <div class="data-row hidden" id="conversion-row">
+    <!-- Conversion Shelf -->
+    <div class="data-row">
         <div class="data-group hidden" id="group-bin">
             <div class="label">Binary</div>
             <input type="text" id="binary-input" maxlength="8" oninput="handleManualEntry('bin')">
@@ -180,7 +176,8 @@
         </div>
     </div>
 
-    <div class="data-row hidden" id="ascii-row">
+    <!-- ASCII Shelf -->
+    <div class="data-row">
         <div class="data-group hidden" id="group-ascii">
             <div class="label">ASCII Character</div>
             <input type="text" id="ascii-input" maxlength="1" oninput="handleManualEntry('ascii')">
@@ -191,29 +188,24 @@
         </div>
     </div>
 
-    <!-- Removed 'active' class from buttons so they start as outlines -->
     <div class="controls">
-        <button class="toggle-btn" onclick="toggleVisibilityGroup(['conversion-row', 'group-bin'], this)">Binary</button>
-        <button class="toggle-btn" onclick="toggleVisibilityGroup(['conversion-row', 'group-dec'], this)">Decimal</button>
-        <button class="toggle-btn" onclick="toggleVisibilityGroup(['conversion-row', 'group-hex'], this)">Hex</button>
-        <button class="toggle-btn" onclick="toggleVisibilityGroup(['ascii-row', 'group-ascii'], this)">Character</button>
-        <button class="toggle-btn" onclick="toggleVisibilityGroup(['ascii-row', 'group-desc'], this)">Description</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-bin', this)">Binary</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-dec', this)">Decimal</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-hex', this)">Hex</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-ascii', this)">Character</button>
+        <button class="toggle-btn" onclick="toggleVisibility('group-desc', this)">Description</button>
         <button class="toggle-btn" onclick="toggleLabels(this)">Labels</button>
         <button class="action-btn" onclick="clearAll()">Clear All</button>
     </div>
 
     <div class="footer">
-        An adventure in learning created by Tom Anlezark. Version 1.5
+        An adventure in learning created by Tom Anlezark. Version 1.6
     </div>
 
     <script>
         let bits = [0, 0, 0, 0, 0, 0, 0, 0];
         const switches = document.querySelectorAll('.bit-switch');
-
-        const specialChars = {
-            0: "Null", 8: "Backspace", 9: "Tab", 10: "Line Feed", 13: "Enter", 
-            32: "Space", 127: "Delete"
-        };
+        const specialChars = { 0: "Null", 8: "Backspace", 9: "Tab", 10: "Line Feed", 13: "Enter", 32: "Space", 127: "Delete" };
 
         function toggleBit(index) {
             bits[index] = bits[index] === 0 ? 1 : 0;
@@ -253,6 +245,11 @@
                 binaryStr += bit;
                 if (bit === 1) switches[7-i].classList.add('on');
                 else switches[7-i].classList.remove('on');
+                
+                // Sync label color if ON
+                if (switches[7-i].style.color !== 'transparent') {
+                    switches[7-i].style.color = (bit === 1) ? '#1a1d23' : 'var(--text-dim)';
+                }
             }
             if (excludeSource !== 'bin') document.getElementById('binary-input').value = binaryStr;
             if (excludeSource !== 'dec') document.getElementById('decimal-input').value = total;
@@ -263,22 +260,27 @@
             document.getElementById('ascii-desc').innerText = specialChars[total] || "Printable Character";
         }
 
-        // Updated visibility logic to handle parent rows automatically
-        function toggleVisibilityGroup(ids, btn) {
-            ids.forEach(id => document.getElementById(id).classList.toggle('hidden'));
+        // Back to the simpler toggle logic
+        function toggleVisibility(id, btn) {
+            document.getElementById(id).classList.toggle('hidden');
             btn.classList.toggle('active');
         }
 
         function toggleLabels(btn) {
-            switches.forEach(s => {
-                s.style.color = (s.style.color === 'transparent' || s.style.color === '') ? 'var(--text-dim)' : 'transparent';
-                // Sync the ON state color if labels are on
-                if (s.classList.contains('on')) s.style.color = (s.style.color === 'transparent') ? 'transparent' : '#1a1d23';
+            switches.forEach((s, i) => {
+                const bitIndex = 7 - i;
+                const isCurrentlyTransparent = (s.style.color === 'transparent');
+                
+                if (isCurrentlyTransparent) {
+                    s.style.color = (bits[bitIndex] === 1) ? '#1a1d23' : 'var(--text-dim)';
+                } else {
+                    s.style.color = 'transparent';
+                }
             });
             btn.classList.toggle('active');
         }
         
-        // Final tweak: Initial state has labels OFF
+        // Initial State: Labels Hidden
         switches.forEach(s => s.style.color = 'transparent');
         updateUI();
     </script>
